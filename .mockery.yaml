@@ -1,0 +1,4 @@
+packages:
+  suite-test/user:
+    config:
+      all: true
