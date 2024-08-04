@@ -78,7 +78,7 @@ func (m *UserRepositorySaveMockExpect) applyOn(repo *mockUser.MockUserRepository
 		return
 	}
 
-	repo.EXPECT().Save(m.ExpectUser).Return(m.ReturnUser, m.ReturnErr)
+	repo.EXPECT().Save(m.ExpectUser).Return(m.ReturnUser, m.ReturnErr).Once()
 }
 
 type UserRepositoryGetMockExpect struct {
@@ -93,7 +93,7 @@ func (m *UserRepositoryGetMockExpect) applyOn(repo *mockUser.MockUserRepository)
 		return
 	}
 
-	repo.EXPECT().Get(m.ExpectID).Return(m.ReturnUser, m.ReturnErr)
+	repo.EXPECT().Get(m.ExpectID).Return(m.ReturnUser, m.ReturnErr).Once()
 }
 
 type EmailSenderSendMockExpect struct {
@@ -108,5 +108,5 @@ func (m *EmailSenderSendMockExpect) applyOn(sender *mockUser.MockEmailSender) {
 		return
 	}
 
-	sender.EXPECT().Send(m.ExpectEmail, m.ExpectContent).Return(m.Return)
+	sender.EXPECT().Send(m.ExpectEmail, m.ExpectContent).Return(m.Return).Once()
 }

@@ -52,25 +52,59 @@ func (s *UserSuite) TestFailureRegisterInvalidName() {
 }
 
 func (s *UserSuite) TestFailureRegisterSendFailed() {
-	var sendError = errors.New("sender error")
-	s.setupMockExpect(MockExpect{
-		UserRepository: &UserRepositoryMockExpect{
-			Save: &UserRepositorySaveMockExpect{
-				ExpectUser: user.User{Name: "eric", Email: "email@mail.com"},
-				ReturnUser: user.User{Id: 1, Name: "eric", Email: "email@mail.com"},
+	tests := []struct {
+		MockExpect  MockExpect
+		ArgName     string
+		ArgEmail    string
+		Expect      user.User
+		ExpectError error
+	}{
+		{
+			MockExpect: MockExpect{
+				UserRepository: &UserRepositoryMockExpect{
+					Save: &UserRepositorySaveMockExpect{
+						ExpectUser: user.User{Name: "eric", Email: "email@mail.com"},
+						ReturnUser: user.User{Id: 1, Name: "eric", Email: "email@mail.com"},
+					},
+				},
+				EmailSenderSend: &EmailSenderSendMockExpect{
+					ExpectEmail:   "email@mail.com",
+					ExpectContent: "welcome to join us",
+					Return:        errors.New("sender error"),
+				},
 			},
+			ArgName:     "eric",
+			ArgEmail:    "email@mail.com",
+			Expect:      user.User{},
+			ExpectError: errors.New("sender error"),
 		},
-		EmailSenderSend: &EmailSenderSendMockExpect{
-			ExpectEmail:   "email@mail.com",
-			ExpectContent: "welcome to join us",
-			Return:        sendError,
+		{
+			MockExpect: MockExpect{
+				UserRepository: &UserRepositoryMockExpect{
+					Save: &UserRepositorySaveMockExpect{
+						ExpectUser: user.User{Name: "eric", Email: "email@mail.com"},
+						ReturnUser: user.User{Id: 1, Name: "eric", Email: "email@mail.com"},
+					},
+				},
+				EmailSenderSend: &EmailSenderSendMockExpect{
+					ExpectEmail:   "email@mail.com",
+					ExpectContent: "welcome to join us",
+					Return:        errors.New("another error"),
+				},
+			},
+			ArgName:     "eric",
+			ArgEmail:    "email@mail.com",
+			Expect:      user.User{},
+			ExpectError: errors.New("another error"),
 		},
-	})
+	}
+	for _, t := range tests {
+		s.setupMockExpect(t.MockExpect)
 
-	u, err := s.svc.Register("eric", "email@mail.com")
-
-	s.Assert().Error(err)
-	s.Assert().Zero(u)
+		u, err := s.svc.Register(t.ArgName, t.ArgEmail)
+		s.Assert().Equal(t.Expect, u)
+		s.Assert().Equal(t.ExpectError, err)
+	}
 }
 
 func (s *UserSuite) TestSuccessfulFindUser() {
